@@ -1,6 +1,7 @@
 const express = require("express");
 
 const app = express();
+// console.log(object)
 
 app.get("/dashboard", (req, res) => {
   res.send("server running on dashboard");

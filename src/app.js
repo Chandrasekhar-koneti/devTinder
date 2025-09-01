@@ -1,10 +1,17 @@
 const express = require("express");
 
 const app = express();
-// console.log(object)
 
-app.get("/dashboard", (req, res) => {
-  res.send("server running on dashboard");
+app.get("/user", (req, res) => {
+  res.send({ fname: "chandra", lname: "sekhar" });
+});
+
+app.post("/user", (req, res) => {
+  res.send("user created");
+});
+
+app.delete("/user", (req, res) => {
+  res.send("user deleted");
 });
 
 app.get("/", (req, res) => {

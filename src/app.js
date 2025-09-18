@@ -1,29 +1,35 @@
 const express = require("express");
-
+const connectDB = require("./config/dataBase");
 const app = express();
 
-app.get("/user", (req, res) => {
-  res.send({ fname: "chandra", lname: "sekhar" });
+const User = require("./models/user");
+
+app.post("/signup", async (req, res) => {
+  const userObj = {
+    firstName: "chandra",
+    lastName: "sekhar",
+    emailId: "koentichandra123@gmail.com",
+    password: "password",
+  };
+
+  const user = new User(userObj);
+
+  try {
+    await user.save();
+
+    res.send("user added ");
+  } catch (err) {
+    res.status(400).send("bad response");
+  }
 });
 
-app.post("/user", (req, res) => {
-  res.send("user created");
-});
-
-//
-
-app.delete("/user", (req, res) => {
-  res.send("user deleted");
-});
-
-app.get("/", (req, res) => {
-  res.send("starting server");
-});
-
-app.use((req, res) => {
-  res.status(404).send("Route not found");
-});
-
-app.listen(2222, () => {
-  console.log("server is running on port 2222");
-});
+connectDB()
+  .then(() => {
+    console.log("connected to db");
+    app.listen(2222, () => {
+      console.log("server is running on port 2222");
+    });
+  })
+  .catch((err) => {
+    console.log(" error connecting to db ", err);
+  });

@@ -1,20 +1,75 @@
 const express = require("express");
 const connectDB = require("./config/dataBase");
 const app = express();
-
+const { validateSignUpBody } = require("./utils/UserValidations");
 const User = require("./models/user");
-
+const bcrypt = require("bcrypt");
 app.use(express.json());
+const validator = require("validator");
 
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
-
   try {
+    validateSignUpBody(req);
+
+    const {
+      firstName,
+      lastName,
+      emailId,
+      password,
+      age,
+      gender,
+      about,
+      photoUrl,
+    } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+      age,
+      gender,
+      about,
+      photoUrl,
+    });
     await user.save();
 
     res.send("user added ");
   } catch (err) {
-    res.status(400).send("bad response");
+    if (err.name === "ValidationError") {
+      const messages = Object.values(err.errors).map((e) => e.message);
+      return res.status(400).json({ msg: messages[0] });
+    }
+
+    res.status(400).json({ err: err.message });
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    if (!validator.isEmail(emailId)) {
+      throw new Error("Invalid credentials");
+    }
+    const findUser = await User.findOne({ emailId: emailId });
+
+    if (!findUser) {
+      throw new Error("Invalid credentials");
+    }
+    const isPasswordValid = await bcrypt.compare(password, findUser.password);
+
+    if (isPasswordValid) {
+      res.send({ msg: "Login sucessfull" });
+    } else {
+      throw new Error("Invalid credentials");
+    }
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      const messages = Object.values(err.errors).map((e) => e.message);
+      return res.status(400).json({ msg: messages[0] });
+    }
+
+    res.status(400).json({ err: err.message });
   }
 });
 
@@ -59,15 +114,26 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-app.patch("/user", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
   try {
-    const userId = req.body.userId;
+    const userId = req.params.userId;
     const data = req.body;
-    const updateUser = await User.findByIdAndUpdate(userId, data);
-    console.log("updated");
+    const NotAllowedDetails = ["emailId"];
+
+    if (Object.keys(data).some((field) => NotAllowedDetails.includes(field))) {
+      return res.status(500).send({ msg: "email updating not allowed" });
+    }
+
+    const updateUser = await User.findByIdAndUpdate(userId, data, {
+      new: true,
+      runValidators: true,
+    });
+    if (!updateUser) {
+      return res.status(404).send("User not found");
+    }
     res.send(updateUser);
   } catch (err) {
-    res.status(400).send("something went wrong");
+    res.status(400).send({ msg: "something went wrong", error: err });
   }
 });
 

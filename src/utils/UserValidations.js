@@ -35,4 +35,50 @@ const validateSignUpBody = (req) => {
   }
 };
 
-module.exports = { validateSignUpBody };
+const validateEditProfileData = (req) => {
+  const AllowedFields = [
+    "firstName",
+    "lastName",
+    "about",
+    "age",
+    "gender",
+    "photoUrl",
+    "skills",
+  ];
+  const { firstName, lastName, about, age, gender, photoUrl, skills } =
+    req.body;
+
+  if (
+    (firstName && (firstName.length < 4 || firstName.length > 50)) ||
+    (lastName && (lastName.length < 4 || lastName.length > 50))
+  ) {
+    throw new Error("Name must contain minimum 4 and maximum 50 characters");
+  }
+
+  if (skills && (skills.length > 8 || skills.length <= 0)) {
+    throw new Error("Skills must be minimum 1 and maximum 8");
+  }
+
+  if (age && (age < 15 || age > 80)) {
+    throw new Error("Age must be between 15 to 80");
+  }
+
+  if (gender && !["male", "female", "others"].includes(gender)) {
+    throw new Error("Invalid gender. Gender must be male or female or others");
+  }
+
+  if (photoUrl && !validator.isURL(photoUrl)) {
+    throw new Error("Invalid photo url" + photoUrl);
+  }
+
+  if (about && (about.length < 10 || about.length > 200)) {
+    throw new Error("About must be between 10 and 200 characters");
+  }
+
+  const isUpdateProfileData = Object.keys(req.body).every((field) =>
+    AllowedFields.includes(field)
+  );
+  return isUpdateProfileData;
+};
+
+module.exports = { validateSignUpBody, validateEditProfileData };

@@ -73,6 +73,20 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
+    skills: {
+      type: [String],
+      validate: {
+        validator: function (value) {
+          return value.length > 0 && value.length <= 8;
+        },
+        message: function (props) {
+          if (props.value.length === 0) {
+            return "At least 1 skill is required";
+          }
+          return "Skills must be less than or equal to 8";
+        },
+      },
+    },
   },
   {
     timestamps: true,

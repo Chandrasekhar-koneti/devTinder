@@ -10,13 +10,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      minLength: 4,
+      minLength: 3,
       maxLength: 20,
     },
     lastName: {
       type: String,
       trim: true,
-      minLength: 4,
+      // minLength: 4,
       maxLength: 20,
     },
     emailId: {
@@ -34,6 +34,8 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       trim: true,
+      // select: false, // hide by default
+
       required: true,
       validate(value) {
         if (!validator.isStrongPassword(value)) {
@@ -53,7 +55,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: {
-        values: ["male", "female", "others"],
+        values: ["Male", "Female", "Others"],
         message: "{VALUE} is not a gender type",
       },
       // validate(value) {

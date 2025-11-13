@@ -6,7 +6,8 @@ const validator = require("validator");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const { validateSignUpBody } = require("..//utils/UserValidations");
-
+const USER_SAFE_DATA = "firstName lastName photoUrl about age gender skills";
+const jwt = require("jsonwebtoken");
 //signup
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -22,7 +23,14 @@ authRouter.post("/signup", async (req, res) => {
       about,
       photoUrl,
     } = req.body;
+
+    const findDuplicateUser = await User.findOne({ emailId });
+    if (findDuplicateUser) {
+      throw new Error("Email already exist");
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
+
     const user = new User({
       firstName,
       lastName,
@@ -35,14 +43,14 @@ authRouter.post("/signup", async (req, res) => {
     });
     await user.save();
 
-    res.send("user added ");
+    res.send({ msg: "user added" });
   } catch (err) {
     if (err.name === "ValidationError") {
       const messages = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ msg: messages[0] });
+      return res.status(400).json({ error: messages[0] });
     }
 
-    res.status(400).json({ err: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -53,7 +61,7 @@ authRouter.post("/login", async (req, res) => {
     if (!validator.isEmail(emailId)) {
       throw new Error("Invalid credentials");
     }
-    const findUser = await User.findOne({ emailId: emailId });
+    const findUser = await User.findOne({ emailId });
 
     if (!findUser) {
       throw new Error("Invalid credentials");
@@ -67,7 +75,9 @@ authRouter.post("/login", async (req, res) => {
         token,
         { expires: new Date(Date.now() + 60 * 60 * 1000) } // can use   maxAge: 60 * 60 * 1000 // 1 hour in milliseconds
       );
-      res.send({ msg: "Login sucessfull" });
+      const { password, emailId, ...safeUser } = findUser.toObject();
+
+      res.send({ code: 200, msg: "Login sucessfull", userDetails: safeUser });
     } else {
       throw new Error("Invalid credentials");
     }
@@ -81,8 +91,34 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 
-//logout
+authRouter.get("/verify-token", async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ error: "No token found" });
+    }
 
+    // verify token
+    const decoded = jwt.verify(token, "cskchandra@123");
+
+    // find user by ID
+    const user = await User.findById(decoded._id).select(
+      "firstName lastName  photoUrl"
+    );
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid user" });
+    }
+
+    // token valid
+    res.json({ valid: true, user });
+  } catch (err) {
+    console.error(err);
+    res.status(401).json({ error: "Invalid or expired token" });
+  }
+});
+
+//logout
 authRouter.post("/logout", (req, res) => {
   res
     .cookie("token", null, {

@@ -3,11 +3,11 @@ const validator = require("validator");
 const validateSignUpBody = (req) => {
   const { firstName, lastName, emailId, password, age, gender } = req.body;
 
-  if (!firstName || !lastName) {
+  if (!firstName) {
     throw new Error("Name is required");
-  } else if (firstName.length < 4 || lastName.length > 50) {
+  } else if (firstName.length < 3 || lastName?.length > 50) {
     throw new Error(
-      "Name must contain minimum 4 charaters and maximum 50 characters "
+      "Name must contain minimum 3 charaters and maximum 20 characters "
     );
   }
   if (!emailId) {
@@ -30,7 +30,7 @@ const validateSignUpBody = (req) => {
 
   if (!gender) {
     throw new Error("Gender is required");
-  } else if (!["male", "female", "others"].includes(gender)) {
+  } else if (!["Male", "Female", "Others"].includes(gender)) {
     throw new Error("Invalid gender.");
   }
 };
@@ -49,10 +49,10 @@ const validateEditProfileData = (req) => {
     req.body;
 
   if (
-    (firstName && (firstName.length < 4 || firstName.length > 50)) ||
-    (lastName && (lastName.length < 4 || lastName.length > 50))
+    (firstName && (firstName.length < 3 || firstName.length > 20)) ||
+    (lastName && lastName.length > 50)
   ) {
-    throw new Error("Name must contain minimum 4 and maximum 50 characters");
+    throw new Error("Name must contain minimum 3 and maximum 20 characters");
   }
 
   if (skills && (skills.length > 8 || skills.length <= 0)) {
@@ -63,8 +63,8 @@ const validateEditProfileData = (req) => {
     throw new Error("Age must be between 15 to 80");
   }
 
-  if (gender && !["male", "female", "others"].includes(gender)) {
-    throw new Error("Invalid gender. Gender must be male or female or others");
+  if (gender && !["Male", "Female", "Others"].includes(gender)) {
+    throw new Error("Invalid gender. Gender must be Male or Female or Others");
   }
 
   if (photoUrl && !validator.isURL(photoUrl)) {

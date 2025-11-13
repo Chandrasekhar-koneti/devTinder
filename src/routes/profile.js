@@ -10,8 +10,19 @@ const { validateEditProfileData } = require("../utils/UserValidations");
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
     const findUser = req.user;
+    const safeUserData = (({
+      firstName,
+      lastName,
+      photoUrl,
+      about,
+      age,
+      gender,
+      skills,
+    }) => ({ firstName, lastName, photoUrl, about, age, gender, skills }))(
+      findUser
+    );
 
-    res.send({ msg: "profile fetched successfully", profile: findUser });
+    res.send({ msg: "profile fetched successfully", profile: safeUserData });
   } catch (err) {
     if (err.name === "ValidationError") {
       const messages = Object.values(err.errors).map((e) => e.message);
@@ -32,8 +43,21 @@ profileRouter.patch("/profile/edit", userAuth, (req, res) => {
       (field) => (loggedUser[field] = req.body[field])
     );
     loggedUser.save();
+    const safeLoggedUserData = (({
+      firstName,
+      lastName,
+      photoUrl,
+      about,
+      age,
+      gender,
+      skills,
+    }) => ({ firstName, lastName, photoUrl, about, age, gender, skills }))(
+      loggedUser
+    );
+
     res.send({
       msg: `${loggedUser.firstName} your details updated successfully`,
+      safeLoggedUserData,
     });
   } catch (error) {
     res.send({ error: error.message });

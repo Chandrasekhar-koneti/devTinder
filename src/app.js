@@ -10,10 +10,15 @@ const userRouter = require("./routes/user");
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://devswipe-ck.in",
+      "https://www.devswipe-ck.in",
+    ],
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 app.use("/", authRouter);
@@ -23,11 +28,11 @@ app.use("/", userRouter);
 
 connectDB()
   .then(() => {
-    // console.log("connected to db");
-    app.listen(2222, () => {
-      // console.log("server is running on port 2222");
+    const PORT = process.env.PORT || 2222;
+    app.listen(PORT, () => {
+      console.log("server running on port " + PORT);
     });
   })
   .catch((err) => {
-    // console.log(" error connecting to db ", err);
+    console.log("error connecting to db", err);
   });

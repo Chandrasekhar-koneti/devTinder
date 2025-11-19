@@ -53,6 +53,7 @@ requestRouter.post(
         connectionRequest,
       });
     } catch (err) {
+      console.log(err);
       res.status(400).send({ error: err.message });
     }
   }
@@ -86,6 +87,7 @@ requestRouter.post(
       await checkReqIsValidaOrNot.save();
       res.send({ msg: "Connection request " + status });
     } catch (err) {
+      confirm.log(err);
       res.send({ error: err.message });
     }
   }

@@ -40,6 +40,7 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
     });
     res.send({ data });
   } catch (err) {
+    console.log(err);
     res.send({ error: err.message });
   }
 });
@@ -88,6 +89,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
       page,
     });
   } catch (err) {
+    console.log(err);
     res.send({ error: err.message });
   }
 });

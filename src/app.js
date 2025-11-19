@@ -12,7 +12,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://main.dbthdc7s5n4fp.amplifyapp.com",
+      "https://devswipe-ck.in",
+      "https://www.devswipe-ck.in",
     ],
     credentials: true,
   })

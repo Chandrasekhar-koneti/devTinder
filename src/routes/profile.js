@@ -24,6 +24,7 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
 
     res.send({ msg: "profile fetched successfully", profile: safeUserData });
   } catch (err) {
+    console.log(err);
     if (err.name === "ValidationError") {
       const messages = Object.values(err.errors).map((e) => e.message);
       return res.status(400).json({ msg: messages[0] });
@@ -60,6 +61,7 @@ profileRouter.patch("/profile/edit", userAuth, (req, res) => {
       safeLoggedUserData,
     });
   } catch (error) {
+    console.log(err);
     res.send({ error: error.message });
   }
 });
@@ -99,6 +101,7 @@ profileRouter.patch("/profile/passowrd", userAuth, async (req, res) => {
 
     res.send({ msg: "Password changed successfully" });
   } catch (error) {
+    console.log(err);
     res.status(400).send({ msg: error.message });
   }
 });

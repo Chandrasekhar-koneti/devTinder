@@ -5,9 +5,9 @@ const authRouter = express.Router();
 const validator = require("validator");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
-const { validateSignUpBody } = require("..//utils/UserValidations");
 const USER_SAFE_DATA = "firstName lastName photoUrl about age gender skills";
 const jwt = require("jsonwebtoken");
+const { validateSignUpBody } = require("../utils/UserValidations");
 //signup
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -45,6 +45,7 @@ authRouter.post("/signup", async (req, res) => {
 
     res.send({ msg: "user added" });
   } catch (err) {
+    console.log(err);
     if (err.name === "ValidationError") {
       const messages = Object.values(err.errors).map((e) => e.message);
       return res.status(400).json({ error: messages[0] });
@@ -70,11 +71,13 @@ authRouter.post("/login", async (req, res) => {
 
     if (isPasswordValid) {
       const token = await findUser.getJwt();
-      res.cookie(
-        "token",
-        token,
-        { expires: new Date(Date.now() + 60 * 60 * 1000) } // can use   maxAge: 60 * 60 * 1000 // 1 hour in milliseconds
-      );
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: true, // required for HTTPS
+        sameSite: "none", // required for cross-origin cookies
+        maxAge: 60 * 60 * 1000,
+      });
+
       const { password, emailId, ...safeUser } = findUser.toObject();
 
       res.send({ code: 200, msg: "Login sucessfull", userDetails: safeUser });
@@ -82,6 +85,7 @@ authRouter.post("/login", async (req, res) => {
       throw new Error("Invalid credentials");
     }
   } catch (err) {
+    console.log(err);
     if (err.name === "ValidationError") {
       const messages = Object.values(err.errors).map((e) => e.message);
       return res.status(400).json({ msg: messages[0] });
@@ -120,11 +124,15 @@ authRouter.get("/verify-token", async (req, res) => {
 
 //logout
 authRouter.post("/logout", (req, res) => {
-  res
-    .cookie("token", null, {
-      expires: new Date(Date.now()),
-    })
-    .send({ msg: "User logged out successfully" });
+  try {
+    res
+      .cookie("token", null, {
+        expires: new Date(Date.now()),
+      })
+      .send({ msg: "User logged out successfully" });
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 module.exports = authRouter;

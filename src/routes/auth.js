@@ -8,21 +8,14 @@ const User = require("../models/user");
 const USER_SAFE_DATA = "firstName lastName photoUrl about age gender skills";
 const jwt = require("jsonwebtoken");
 const { validateSignUpBody } = require("../utils/UserValidations");
+const upload = require("../middlewares/upload");
 //signup
-authRouter.post("/signup", async (req, res) => {
+authRouter.post("/signup", upload.single("photo"), async (req, res) => {
   try {
     validateSignUpBody(req);
 
-    const {
-      firstName,
-      lastName,
-      emailId,
-      password,
-      age,
-      gender,
-      about,
-      photoUrl,
-    } = req.body;
+    const { firstName, lastName, emailId, password, age, gender, about } =
+      req.body;
 
     const findDuplicateUser = await User.findOne({ emailId });
     if (findDuplicateUser) {
@@ -30,6 +23,12 @@ authRouter.post("/signup", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+
+    let photoData = null;
+
+    if (req.file) {
+      photoData = req.file.buffer; // store binary in DB
+    }
 
     const user = new User({
       firstName,
@@ -39,18 +38,14 @@ authRouter.post("/signup", async (req, res) => {
       age,
       gender,
       about,
-      photoUrl,
+      photo: photoData, // stored image
     });
+
     await user.save();
 
     res.send({ msg: "user added" });
   } catch (err) {
     console.log(err);
-    if (err.name === "ValidationError") {
-      const messages = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ error: messages[0] });
-    }
-
     res.status(400).json({ error: err.message });
   }
 });

@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 const { userAuth } = require("../middlewares/auth");
 
 const { validateEditProfileData } = require("../utils/UserValidations");
+const upload = require("../middlewares/upload");
 //profile api
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
@@ -13,12 +14,12 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
     const safeUserData = (({
       firstName,
       lastName,
-      photoUrl,
+      photo,
       about,
       age,
       gender,
       skills,
-    }) => ({ firstName, lastName, photoUrl, about, age, gender, skills }))(
+    }) => ({ firstName, lastName, photo, about, age, gender, skills }))(
       findUser
     );
 
@@ -34,37 +35,54 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
   }
 });
 
-profileRouter.patch("/profile/edit", userAuth, (req, res) => {
-  try {
-    if (!validateEditProfileData(req)) {
-      throw new Error("Invalid edit request");
-    }
-    const loggedUser = req.user;
-    Object.keys(req.body).forEach(
-      (field) => (loggedUser[field] = req.body[field])
-    );
-    loggedUser.save();
-    const safeLoggedUserData = (({
-      firstName,
-      lastName,
-      photoUrl,
-      about,
-      age,
-      gender,
-      skills,
-    }) => ({ firstName, lastName, photoUrl, about, age, gender, skills }))(
-      loggedUser
-    );
+profileRouter.patch(
+  "/profile/edit",
+  userAuth,
+  upload.single("photo"),
+  async (req, res) => {
+    try {
+      if (!validateEditProfileData(req)) {
+        throw new Error("Invalid edit request");
+      }
 
-    res.send({
-      msg: `${loggedUser.firstName} your details updated successfully`,
-      safeLoggedUserData,
-    });
-  } catch (error) {
-    console.log(err);
-    res.send({ error: error.message });
+      const loggedUser = req.user;
+
+      // Update only text fields, skip "photo"
+      Object.keys(req.body).forEach((field) => {
+        if (field !== "photo") {
+          loggedUser[field] = req.body[field];
+        }
+      });
+
+      // Update photo only if user uploads new image
+      if (req.file) {
+        loggedUser.photo = req.file.buffer;
+      }
+
+      await loggedUser.save();
+
+      const safeLoggedUserData = (({
+        firstName,
+        lastName,
+        photo,
+        about,
+        age,
+        gender,
+        skills,
+      }) => ({ firstName, lastName, photo, about, age, gender, skills }))(
+        loggedUser
+      );
+
+      res.send({
+        msg: `${loggedUser.firstName} your details updated successfully`,
+        safeLoggedUserData,
+      });
+    } catch (error) {
+      console.log(error);
+      res.send({ error: error.message });
+    }
   }
-});
+);
 
 profileRouter.patch("/profile/passowrd", userAuth, async (req, res) => {
   try {

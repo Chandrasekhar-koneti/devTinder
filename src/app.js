@@ -14,6 +14,7 @@ app.use(
       "http://localhost:5173",
       "https://devswipe-ck.in",
       "https://www.devswipe-ck.in",
+      "https://api.devswipe-ck.in",
     ],
     credentials: true,
   })

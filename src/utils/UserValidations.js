@@ -42,11 +42,10 @@ const validateEditProfileData = (req) => {
     "about",
     "age",
     "gender",
-    "photoUrl",
+    "photo",
     "skills",
   ];
-  const { firstName, lastName, about, age, gender, photoUrl, skills } =
-    req.body;
+  const { firstName, lastName, about, age, gender, photo, skills } = req.body;
 
   if (
     (firstName && (firstName.length < 3 || firstName.length > 20)) ||
@@ -67,9 +66,9 @@ const validateEditProfileData = (req) => {
     throw new Error("Invalid gender. Gender must be Male or Female or Others");
   }
 
-  if (photoUrl && !validator.isURL(photoUrl)) {
-    throw new Error("Invalid photo url" + photoUrl);
-  }
+  // if (photo && !validator.isURL(photo)) {
+  //   throw new Error("Invalid photo url" + photo);
+  // }
 
   if (about && (about.length < 10 || about.length > 200)) {
     throw new Error("About must be between 10 and 200 characters");

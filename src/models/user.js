@@ -68,17 +68,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    // photoUrl: {
-    //   type: String,
-    //   default:
-    //     "https://images.pexels.com/photos/982021/pexels-photo-982021.jpeg",
-    //   trim: true,
-    //   validate(value) {
-    //     if (!validator.isURL(value)) {
-    //       throw new Error("Invalid photo url" + value);
-    //     }
-    //   },
-    // },
+
     photo: {
       type: Buffer,
     },

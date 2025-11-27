@@ -5,7 +5,7 @@ const authRouter = express.Router();
 const validator = require("validator");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
-const USER_SAFE_DATA = "firstName lastName photoUrl about age gender skills";
+const USER_SAFE_DATA = "firstName lastName photo about age gender skills";
 const jwt = require("jsonwebtoken");
 const { validateSignUpBody } = require("../utils/UserValidations");
 const upload = require("../middlewares/upload");
@@ -14,8 +14,16 @@ authRouter.post("/signup", upload.single("photo"), async (req, res) => {
   try {
     validateSignUpBody(req);
 
-    const { firstName, lastName, emailId, password, age, gender, about } =
-      req.body;
+    const {
+      firstName,
+      lastName,
+      emailId,
+      password,
+      age,
+      gender,
+      about,
+      skills,
+    } = req.body || {};
 
     const findDuplicateUser = await User.findOne({ emailId });
     if (findDuplicateUser) {
@@ -25,9 +33,18 @@ authRouter.post("/signup", upload.single("photo"), async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     let photoData = null;
-
     if (req.file) {
-      photoData = req.file.buffer; // store binary in DB
+      photoData = req.file.buffer;
+    }
+
+    // Parse skills array coming from FormData
+    let parsedSkills = [];
+    if (skills) {
+      try {
+        parsedSkills = JSON.parse(skills);
+      } catch (err) {
+        parsedSkills = [];
+      }
     }
 
     const user = new User({
@@ -38,7 +55,8 @@ authRouter.post("/signup", upload.single("photo"), async (req, res) => {
       age,
       gender,
       about,
-      photo: photoData, // stored image
+      photo: photoData,
+      skills: parsedSkills, // FIXED
     });
 
     await user.save();
@@ -102,7 +120,7 @@ authRouter.get("/verify-token", async (req, res) => {
 
     // find user by ID
     const user = await User.findById(decoded._id).select(
-      "firstName lastName  photoUrl"
+      "firstName lastName  photo"
     );
 
     if (!user) {
